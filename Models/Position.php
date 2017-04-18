@@ -1,6 +1,6 @@
 <?php
 
-namespace Molab\Carribean;
+namespace Molab\Carribean\Models;
 
 /**
  * @author Moritz Wachter <moritzwachter@yahoo.de>
@@ -28,16 +28,6 @@ class Position {
      * @return bool
      */
     public function equals($x, $y) {
-        if (true) {
-            error_log(
-                sprintf("%s|%s ? %s|%s",
-                    $x,
-                    $y,
-                    $this->x,
-                    $this->y
-                )
-            );
-        }
         return $this->x == $x && $this->y == $y;
     }
 
@@ -53,5 +43,17 @@ class Position {
      */
     public function getY() {
         return $this->y;
+    }
+
+    /**
+     * @param Position $position
+     * @return number
+     */
+    public function diff(Position $position)
+    {
+        $diffX = abs($position->getX() - $this->x);
+        $diffY = abs($position->getY() - $this->y);
+
+        return $diffX + $diffY;
     }
 }

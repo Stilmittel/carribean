@@ -1,6 +1,6 @@
 <?php
 
-namespace Molab\Carribean;
+namespace Molab\Carribean\Models;
 
 /**
  * @author Moritz Wachter <moritzwachter@yahoo.de>
@@ -12,6 +12,9 @@ class Ship
 
     /** @var  int $direction */
     protected $direction;
+
+    /** @var  int $speed */
+    protected $speed;
 
     /**
      * @param $x
@@ -43,5 +46,21 @@ class Ship
     public function getDirection()
     {
         return $this->direction;
+    }
+
+    /**
+     * @param $arg2
+     */
+    public function setSpeed($arg2)
+    {
+        $this->speed = $arg2;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSpeed()
+    {
+        return $this->speed;
     }
 }

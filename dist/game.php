@@ -1,5 +1,70 @@
 <?php 
 
+class BarrelContainer
+{
+    /** @var Barrel[] */
+    protected $container;
+
+    public function __construct() {
+        $this->container = [];
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     * @param $amount
+     */
+    public function add($x, $y, $amount, $entityId) {
+        $this->container[$entityId] = new Barrel($x, $y, $amount);
+    }
+
+    /**
+     * @param Position $position
+     * @return Barrel
+     */
+    public function getNextBarrel(Position $position) {
+        return $this->getClosestBarrel($position);
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function remove($x, $y) {
+        foreach($this->container as $i => $barrel) {
+            if ($barrel->getPosition()->equals($x, $y)) {
+                unset($this->container[$i]);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param Position $fromPosition
+     * @return Barrel
+     */
+    public function getClosestBarrel(Position $fromPosition)
+    {
+        $closestKey = null;
+        $minimalDiff = 1000;
+
+        foreach ($this->container as $i => $barrel) {
+            $diff = $barrel->getPosition()->diff($fromPosition);
+
+            if ($diff < $minimalDiff) {
+                $closestKey = $i;
+                $minimalDiff = $diff;
+            }
+        }
+
+        if (array_key_exists($closestKey, $this->container)) {
+            return $this->container[$closestKey];
+        }
+
+        return null;
+    }
+}
+
 class Barrel
 {
     /** @var Position  */
@@ -36,71 +101,6 @@ class Barrel
     }
 }
 
-class BarrelContainer
-{
-    /** @var Barrel[] */
-    protected $container;
-
-    public function __construct() {
-        $this->container = [];
-    }
-
-    /**
-     * @param $x
-     * @param $y
-     * @param $amount
-     */
-    public function addBarrel($x, $y, $amount) {
-        $this->container[] = new Barrel($x, $y, $amount);
-    }
-
-    /**
-     * @param $x
-     * @param $y
-     * @return Barrel
-     */
-    public function getNextBarrel($x, $y) {
-        return $this->getClosestBarrel($x, $y);
-    }
-
-    /**
-     * @param $x
-     * @param $y
-     */
-    public function removeBarrel($x, $y) {
-        foreach($this->container as $i => $barrel) {
-            if ($barrel->getPosition()->equals($x, $y)) {
-                unset($this->container[$i]);
-            }
-        }
-    }
-
-    /**
-     * @param $x
-     * @param $y
-     *
-     * @return Barrel
-     */
-    public function getClosestBarrel($x, $y)
-    {
-        $closestKey = null;
-        $minimalDiff = 1000;
-
-        foreach ($this->container as $i => $barrel) {
-            $diffX = abs($barrel->getPosition()->getX() - $x);
-            $diffY = abs($barrel->getPosition()->getY() - $y);
-
-            $diff = $diffX + $diffY;
-
-            if ($diff < $minimalDiff) {
-                $closestKey = $i;
-            }
-        }
-
-        return $this->container[$i];
-    }
-}
-
 class Position {
 
     /** @var  int $x */
@@ -124,16 +124,6 @@ class Position {
      * @return bool
      */
     public function equals($x, $y) {
-        if (true) {
-            error_log(
-                sprintf("%s|%s ? %s|%s",
-                    $x,
-                    $y,
-                    $this->x,
-                    $this->y
-                )
-            );
-        }
         return $this->x == $x && $this->y == $y;
     }
 
@@ -150,6 +140,18 @@ class Position {
     public function getY() {
         return $this->y;
     }
+
+    /**
+     * @param Position $position
+     * @return number
+     */
+    public function diff(Position $position)
+    {
+        $diffX = abs($position->getX() - $this->x);
+        $diffY = abs($position->getY() - $this->y);
+
+        return $diffX + $diffY;
+    }
 }
 
 class Ship
@@ -159,6 +161,9 @@ class Ship
 
     /** @var  int $direction */
     protected $direction;
+
+    /** @var  int $speed */
+    protected $speed;
 
     /**
      * @param $x
@@ -191,18 +196,144 @@ class Ship
     {
         return $this->direction;
     }
+
+    /**
+     * @param $arg2
+     */
+    public function setSpeed($arg2)
+    {
+        $this->speed = $arg2;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSpeed()
+    {
+        return $this->speed;
+    }
+}
+
+class Mine extends Cannonball
+{
+}
+
+class Enemy extends Ship
+{
+}
+
+class Cannonball extends Barrel
+{
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function __construct($x ,$y)
+    {
+        $this->position = new Position($x, $y);
+    }
+}
+
+class CannonContainer
+{
+    /** @var Barrel[] */
+    protected $container;
+
+    public function __construct() {
+        $this->container = [];
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function add($x, $y) {
+        $this->container[] = new Cannonball($x, $y);
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function remove($x, $y) {
+        foreach($this->container as $i => $barrel) {
+            if ($barrel->getPosition()->equals($x, $y)) {
+                unset($this->container[$i]);
+            }
+        }
+    }
+}
+
+class MineContainer
+{
+    /** @var Barrel[] */
+    protected $container;
+
+    public function __construct() {
+        $this->container = [];
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function add($x, $y, $entityId) {
+        $this->container[$entityId] = new Mine($x, $y);
+    }
+
+    /**
+     * @param $x
+     * @param $y
+     */
+    public function remove($x, $y) {
+        foreach($this->container as $i => $mine) {
+            if ($mine->getPosition()->equals($x, $y)) {
+                unset($this->container[$i]);
+            }
+        }
+    }
+
+    /**
+     * @param Position $fromPosition
+     * @return Barrel|null
+     */
+    public function getMineToShoot(Position $fromPosition)
+    {
+        $closestKey = null;
+        $minimalDiff = 15;
+        $limit = 8;
+
+        foreach ($this->container as $i => $barrel) {
+            $diff = $barrel->getPosition()->diff($fromPosition);
+
+            if ($diff < $minimalDiff && $diff > $limit) {
+                $closestKey = $i;
+                $minimalDiff = $diff;
+            }
+        }
+
+        if (array_key_exists($closestKey, $this->container)) {
+            return $this->container[$closestKey];
+        }
+
+        return null;
+    }
 }
 
 class Game
 {
     public static function execute()
     {
-        $barrels = new BarrelContainer();
-        $player = new Ship();
-
         // game loop
         while (TRUE)
         {
+            $barrels = new BarrelContainer();
+            $cannons = new CannonContainer();
+            /** @var Enemy[] $enemies */
+            $enemies = array();
+            $playerShips = array();
+            $mines = new MineContainer();
+
             fscanf(STDIN, "%d",
                 $myShipCount // the number of remaining ships
             );
@@ -211,34 +342,109 @@ class Game
             );
             for ($i = 0; $i < $entityCount; $i++)
             {
-                fscanf(STDIN, "%d %s %d %d %d %d %d %d",
-                    $entityId,
-                    $entityType,
-                    $x,
-                    $y,
-                    $arg1,
-                    $arg2,
-                    $arg3,
-                    $arg4
-                );
+                $parameters = fscanf(STDIN, "%d %s %d %d %d %d %d %d");
+                list ($entityId, $entityType, $x, $y, $arg1, $arg2, $arg3, $arg4) = $parameters;
 
-                if ($entityType == TypeInterface::BARREL) {
-                    if ($player->getPosition()->equals($x, $y)) {
-                        $barrels->removeBarrel($x, $y);
-                        error_log("removing barrel");
-                    } else {
-                        $barrels->addBarrel($x, $y, $arg1);
-                    }
-                } else if ($entityType == TypeInterface::SHIP && $arg4 == 1) {
-                    $player->setPosition($x, $y);
-                    $player->setDirection($arg1);
+                switch ($entityType)
+                {
+                    case Type::BARREL:
+                        $barrels->add($x, $y, $arg1, $entityId);
+                        break;
+
+                    case Type::SHIP:
+                        //handle ship
+                        if ($arg4 == 1) {
+                            $player = new Ship();
+                            $player->setPosition($x, $y);
+                            $player->setDirection($arg1);
+                            $player->setSpeed($arg2);
+
+                            $playerShips[] = $player;
+                        } else {
+                            $enemy = new Enemy();
+                            $enemy->setPosition($x, $y);
+                            $enemy->setDirection($arg1);
+                            $enemy->setSpeed($arg2);
+
+                            $enemies[$entityId] = $enemy;
+                        }
+                        break;
+
+                    case Type::CANNON:
+                        //handle cannonball
+                        $cannons->add($x, $y);
+                        break;
+
+                    case Type::MINE:
+                        //handle mine
+                        $mines->add($x, $y, $entityId);
+                        break;
                 }
-            }
-            for ($i = 0; $i < $myShipCount; $i++)
-            {
-                $barrel = $barrels->getNextBarrel($x, $y);
 
-                $cmd = "MOVE " . $barrel->getPosition()->getX() . " " . $barrel->getPosition()->getY() . "\n";
+            }
+
+            foreach ($playerShips as $player)
+            {
+                $barrel = $barrels->getNextBarrel($player->getPosition());
+
+                if ($barrel) {
+                    $cmd = sprintf("MOVE %s %s\n",
+                        $barrel->getPosition()->getX(),
+                        $barrel->getPosition()->getY()
+                    );
+                }
+
+                $min = 8;
+                $closestEnemy = null;
+
+                foreach ($enemies as $enemy) {
+                    $diff = $enemy->getPosition()->diff($player->getPosition());
+
+                    if ($diff < $min) {
+                        $closestEnemy = $enemy;
+                        $min = $diff;
+                    }
+                }
+
+                if ($closestEnemy != null) {
+                    $dir = $closestEnemy->getDirection();
+                    $x = $closestEnemy->getPosition()->getX();
+                    $y = $closestEnemy->getPosition()->getY();
+
+                    $speed = $closestEnemy->getSpeed();
+
+                    $modifier = ceil((1 + rand(0, 1)) * $speed);
+
+                    if ($dir == 0) {
+                        $x += $modifier;
+                    } else if ($dir == 1) {
+                        $x += $modifier;
+                        $y -= $modifier;
+                    } else if ($dir == 2) {
+                        $x -= $modifier;
+                        $y -= $modifier;
+                    } else if ($dir == 3) {
+                        $x -= $modifier;
+                    } else if ($dir == 4) {
+                        $x -= $modifier;
+                        $y += $modifier;
+                    } else if ($dir == 5) {
+                        $x += $modifier;
+                        $y += $modifier;
+                    }
+
+                    $cmd = sprintf("FIRE %s %s\n",
+                        abs($x),
+                        abs($y)
+                    );
+                }
+
+//                if ($mine = $mines->getMineToShoot($player->getPosition())) {
+//                    $cmd = sprintf("FIRE %s %s\n",
+//                        $mine->getPosition()->getX(),
+//                        $mine->getPosition()->getY()
+//                    );
+//                }
 
                 // Write an action using echo(). DON'T FORGET THE TRAILING \n
                 // To debug (equivalent to var_dump): error_log(var_export($var, true));
@@ -249,7 +455,7 @@ class Game
     }
 }
 
-interface TypeInterface {
+final class Type {
     const BARREL = 'BARREL';
     const SHIP = 'SHIP';
     const CANNON = 'CANNONBALL';

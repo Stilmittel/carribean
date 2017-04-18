@@ -2,7 +2,7 @@
 
 namespace Molab\Carribean;
 
-interface TypeInterface {
+final class Type {
     const BARREL = 'BARREL';
     const SHIP = 'SHIP';
     const CANNON = 'CANNONBALL';

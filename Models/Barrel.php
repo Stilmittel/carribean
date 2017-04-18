@@ -1,6 +1,6 @@
 <?php
 
-namespace Molab\Carribean;
+namespace Molab\Carribean\Models;
 
 /**
  * @author Moritz Wachter <moritzwachter@yahoo.de>

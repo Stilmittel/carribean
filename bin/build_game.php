@@ -1,19 +1,33 @@
 <?php
 
-include('Barrel.php');
 include('BarrelContainer.php');
+include('CannonContainer.php');
+include('MineContainer.php');
 include('Game.php');
-include('Position.php');
-include('Ship.php');
-include('TypeInterface.php');
+include('Type.php');
+
+include('Models/Barrel.php');
+include('Models/Position.php');
+include('Models/Cannonball.php');
+include('Models/Ship.php');
+include('Models/Mine.php');
+include('Models/Enemy.php');
 
 $classNames = array(
-    'Molab\Carribean\Barrel',
     'Molab\Carribean\BarrelContainer',
-    'Molab\Carribean\Position',
-    'Molab\Carribean\Ship',
+    'Molab\Carribean\Models\Barrel',
+    'Molab\Carribean\Models\Position',
+    'Molab\Carribean\Models\Ship',
+    'Molab\Carribean\Models\Mine',
+    'Molab\Carribean\Models\Enemy',
+    'Molab\Carribean\Models\Cannonball',
+
+
+    'Molab\Carribean\CannonContainer',
+    'Molab\Carribean\MineContainer',
+
     'Molab\Carribean\Game',
-    'Molab\Carribean\TypeInterface',
+    'Molab\Carribean\Type',
 );
 
 $finalContent = "";
@@ -43,7 +57,4 @@ $file = fopen("dist/game.php", "w");
 fwrite($file, $finalContent);
 fclose($file);
 
-
-
-
-
+echo "Game built. \n";
