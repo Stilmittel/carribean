@@ -300,13 +300,12 @@ class MineContainer
     public function getMineToShoot(Position $fromPosition)
     {
         $closestKey = null;
-        $minimalDiff = 15;
-        $limit = 8;
+        $minimalDiff = 4;
 
         foreach ($this->container as $i => $barrel) {
             $diff = $barrel->getPosition()->diff($fromPosition);
 
-            if ($diff < $minimalDiff && $diff > $limit) {
+            if ($diff < $minimalDiff) {
                 $closestKey = $i;
                 $minimalDiff = $diff;
             }
@@ -320,26 +319,87 @@ class MineContainer
     }
 }
 
+class ShipContainer
+{
+    /** @var Ship[] */
+    protected $enemyShips;
+
+    /** @var  Ship[] */
+    protected $playerShips;
+
+    public function __construct() {
+        $this->enemyShips = [];
+        $this->playerShips = [];
+    }
+
+    /**
+     * @param Ship $ship
+     */
+    public function addEnemyShip(Ship $ship) {
+        $this->enemyShips[] = $ship;
+    }
+
+    /**
+     * @param Ship $ship
+     */
+    public function addPlayerShip(Ship $ship) {
+        $this->playerShips[] = $ship;
+    }
+
+    /**
+     * @return array|Ship[]
+     */
+    public function getPlayerShips()
+    {
+        return $this->playerShips;
+    }
+
+     /**
+     * @return array|Ship[]
+     */
+    public function getEnemyShips()
+    {
+        return $this->enemyShips;
+    }
+
+    /**
+     * @param Position $fromPosition
+     * @return mixed|Ship|null
+     */
+    public function getClosestEnemy(Position $fromPosition)
+    {
+        $closestEnemy = null;
+        $mininimalDistance = 10; //@TODO constant
+
+        foreach ($this->enemyShips as $enemy) {
+            $diff = $enemy->getPosition()->diff($fromPosition);
+
+            if ($diff < $mininimalDistance) {
+                $closestEnemy = $enemy;
+                $mininimalDistance = $diff;
+            }
+        }
+
+        return $closestEnemy;
+    }
+
+}
+
 class Game
 {
     public static function execute()
     {
-        // game loop
         while (TRUE)
         {
             $barrels = new BarrelContainer();
             $cannons = new CannonContainer();
-            /** @var Enemy[] $enemies */
-            $enemies = array();
-            $playerShips = array();
+            $ships = new ShipContainer();
             $mines = new MineContainer();
+            $lastCommand = array();
 
-            fscanf(STDIN, "%d",
-                $myShipCount // the number of remaining ships
-            );
-            fscanf(STDIN, "%d",
-                $entityCount // the number of entities (e.g. ships, mines or cannonballs)
-            );
+            fscanf(STDIN, "%d", $myShipCount);
+            fscanf(STDIN, "%d",$entityCount);
+
             for ($i = 0; $i < $entityCount; $i++)
             {
                 $parameters = fscanf(STDIN, "%d %s %d %d %d %d %d %d");
@@ -359,14 +419,14 @@ class Game
                             $player->setDirection($arg1);
                             $player->setSpeed($arg2);
 
-                            $playerShips[] = $player;
+                            $ships->addPlayerShip($player);
                         } else {
                             $enemy = new Enemy();
                             $enemy->setPosition($x, $y);
                             $enemy->setDirection($arg1);
                             $enemy->setSpeed($arg2);
 
-                            $enemies[$entityId] = $enemy;
+                            $ships->addEnemyShip($enemy);
                         }
                         break;
 
@@ -383,7 +443,7 @@ class Game
 
             }
 
-            foreach ($playerShips as $player)
+            foreach ($ships->getPlayerShips() as $i => $player)
             {
                 $barrel = $barrels->getNextBarrel($player->getPosition());
 
@@ -392,66 +452,83 @@ class Game
                         $barrel->getPosition()->getX(),
                         $barrel->getPosition()->getY()
                     );
-                }
 
-                $min = 8;
-                $closestEnemy = null;
-
-                foreach ($enemies as $enemy) {
-                    $diff = $enemy->getPosition()->diff($player->getPosition());
-
-                    if ($diff < $min) {
-                        $closestEnemy = $enemy;
-                        $min = $diff;
+                    if (in_array($cmd, $lastCommand)) {
+                        $cmd = sprintf("MOVE %s %s\n",
+                            abs($barrel->getPosition()->getX() - 1),
+                            abs($barrel->getPosition()->gety() - 1)
+                        );
                     }
                 }
 
-                if ($closestEnemy != null) {
-                    $dir = $closestEnemy->getDirection();
-                    $x = $closestEnemy->getPosition()->getX();
-                    $y = $closestEnemy->getPosition()->getY();
-
-                    $speed = $closestEnemy->getSpeed();
-
-                    $modifier = ceil((1 + rand(0, 1)) * $speed);
-
-                    if ($dir == 0) {
-                        $x += $modifier;
-                    } else if ($dir == 1) {
-                        $x += $modifier;
-                        $y -= $modifier;
-                    } else if ($dir == 2) {
-                        $x -= $modifier;
-                        $y -= $modifier;
-                    } else if ($dir == 3) {
-                        $x -= $modifier;
-                    } else if ($dir == 4) {
-                        $x -= $modifier;
-                        $y += $modifier;
-                    } else if ($dir == 5) {
-                        $x += $modifier;
-                        $y += $modifier;
-                    }
-
+                if ($mine = $mines->getMineToShoot($player->getPosition())) {
                     $cmd = sprintf("FIRE %s %s\n",
-                        abs($x),
-                        abs($y)
+                        $mine->getPosition()->getX(),
+                        $mine->getPosition()->getY()
                     );
                 }
 
-//                if ($mine = $mines->getMineToShoot($player->getPosition())) {
-//                    $cmd = sprintf("FIRE %s %s\n",
-//                        $mine->getPosition()->getX(),
-//                        $mine->getPosition()->getY()
-//                    );
-//                }
+                $closestEnemy = $ships->getClosestEnemy($player->getPosition());
+                error_log(var_export($closestEnemy, true));
+                if ($closestEnemy != null) {
+                    $cannonTarget = Shooter::aimForEnemy($closestEnemy);
+
+                    $cmd = sprintf("FIRE %s %s\n",
+                        abs($cannonTarget->getX()),
+                        abs($cannonTarget->getY())
+                    );
+                }
 
                 // Write an action using echo(). DON'T FORGET THE TRAILING \n
                 // To debug (equivalent to var_dump): error_log(var_export($var, true));
 
                 echo ($cmd); // Any valid action, such as "WAIT" or "MOVE x y"
+                $lastCommand[$i] = $cmd;
             }
         }
+    }
+}
+
+class Shooter
+{
+    public static function aimForEnemy(Ship $enemy)
+    {
+        $dir = $enemy->getDirection();
+        $x = $enemy->getPosition()->getX();
+        $y = $enemy->getPosition()->getY();
+
+        $speed = $enemy->getSpeed();
+
+        $modifier = (1 * $speed);
+
+        /**
+         * default case: we're on an even line
+         */
+        if ($dir == Directions::E) {
+            $x += $modifier;
+        } else if ($dir == Directions::W) {
+            $x -= $modifier;
+        } else if ($dir == Directions::SW) {
+            $x -= $modifier;
+            $y += $modifier;
+        } else if ($dir == Directions::SE) {
+            $y += $modifier;
+        } else if ($dir == Directions::NE) {
+            $y -= $modifier;
+        } else if ($dir == Directions::NW) {
+            $x -= $modifier;
+            $y -= $modifier;
+        }
+
+        /**
+         * When on an odd line and we're not aiming in a horizontal direction
+         */
+        $currentY = $enemy->getPosition()->getY();
+        if ($currentY % 2 === 1 && $currentY != $y) {
+            $x += 1;
+        }
+
+        return new Position($x, $y);
     }
 }
 
@@ -460,6 +537,15 @@ final class Type {
     const SHIP = 'SHIP';
     const CANNON = 'CANNONBALL';
     const MINE = 'MINE';
+}
+
+final class Directions {
+    const E = 0;
+    const NE = 1;
+    const NW = 2;
+    const W = 3;
+    const SW = 4;
+    const SE = 5;
 }
 
 Game::execute();
