@@ -19,28 +19,6 @@ class Map
 
     public function detect(array $parameters)
     {
-        list ($entityId, $entityType, $x, $y, $arg1, $arg2, $arg3, $arg4) = $parameters;
-
-
-
-        switch ($entityType)
-        {
-            case Type::BARREL:
-                //handle barrel
-                break;
-
-            case Type::SHIP:
-                //handle ship
-                break;
-
-            case Type::CANNON:
-                //handle cannonball
-                break;
-
-            case Type::MINE:
-                //handle mine
-                break;
-        }
     }
 
     /**

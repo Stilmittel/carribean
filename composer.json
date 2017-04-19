@@ -1,0 +1,15 @@
+{
+    "name": "moritz/carribean",
+    "description": "Codingame \"Coders of the Carribean\"",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "^6.1"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Moritz Wachter",
+            "email": "moritz.wachter@exozet.com"
+        }
+    ]
+}

@@ -3,8 +3,11 @@
 include('BarrelContainer.php');
 include('CannonContainer.php');
 include('MineContainer.php');
+include('ShipContainer.php');
 include('Game.php');
 include('Type.php');
+include('Shooter.php');
+include('Directions.php');
 
 include('Models/Barrel.php');
 include('Models/Position.php');
@@ -25,9 +28,12 @@ $classNames = array(
 
     'Molab\Carribean\CannonContainer',
     'Molab\Carribean\MineContainer',
+    'Molab\Carribean\ShipContainer',
 
     'Molab\Carribean\Game',
+    'Molab\Carribean\Shooter',
     'Molab\Carribean\Type',
+    'Molab\Carribean\Directions',
 );
 
 $finalContent = "";

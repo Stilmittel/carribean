@@ -45,13 +45,12 @@ class MineContainer
     public function getMineToShoot(Position $fromPosition)
     {
         $closestKey = null;
-        $minimalDiff = 15;
-        $limit = 8;
+        $minimalDiff = 4;
 
         foreach ($this->container as $i => $barrel) {
             $diff = $barrel->getPosition()->diff($fromPosition);
 
-            if ($diff < $minimalDiff && $diff > $limit) {
+            if ($diff < $minimalDiff) {
                 $closestKey = $i;
                 $minimalDiff = $diff;
             }
